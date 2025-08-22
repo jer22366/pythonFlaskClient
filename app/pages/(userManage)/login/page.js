@@ -60,7 +60,7 @@ export default function Page() {
       </form>
 
       <p className="mt-2">
-        Don&apos;t have an account? <a href="/register" className="text-blue-500 hover:underline">Register here</a>
+        Don&apos;t have an account? <a href="/pages/register" className="text-blue-500 hover:underline">Register here</a>
       </p>
       <p>
         <a href="/" className="text-blue-500 hover:underline">Back to Home</a>

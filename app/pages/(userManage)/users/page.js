@@ -11,6 +11,9 @@ export default function Page() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordUser, setPasswordUser] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
 
   // 載入使用者
   const loadUsers = (page = 1) => {
@@ -73,7 +76,7 @@ export default function Page() {
     fetch(`/api/user/isActive/${user.id}`, { method: "PUT" })
       .then((res) => res.json())
       .then((data) => {
-        if (data.status != 'success') {
+        if (data.status != "success") {
           // 後端更新失敗，回復原本狀態
           setUsers((prev) =>
             prev.map((u) =>
@@ -110,32 +113,77 @@ export default function Page() {
     setEditingUser({ ...editingUser, [e.target.name]: e.target.value });
   };
 
+  const openPasswordModal = (user) => {
+    setPasswordUser(user);
+    setNewPassword("");
+    setIsPasswordModalOpen(true);
+  };
+
+  const closePasswordModal = () => {
+    setPasswordUser(null);
+    setIsPasswordModalOpen(false);
+    setNewPassword("");
+  };
+
+  const resetPassword = (e) => {
+  e.preventDefault();
+  if (!passwordUser) return;
+
+  fetch(`/api/user/resetPassword/${passwordUser.id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: newPassword }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          alert("密碼已更新");
+          closePasswordModal();
+        } else {
+          alert("更新失敗，請稍後再試");
+        }
+      })
+      .catch(() => alert("網路錯誤，請稍後再試"));
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* 側邊欄 */}
       <aside className="w-64 bg-white shadow-lg">
         <h4 className="p-4 font-bold text-lg border-b">管理選單</h4>
         <nav className="flex flex-col p-2 space-y-2">
-          <a href="/dashboard" className="hover:bg-gray-200 px-3 py-2 rounded">
+          <a
+            href="/pages/dashboard"
+            className="hover:bg-gray-200 px-3 py-2 rounded"
+          >
             📊 儀表板
           </a>
-          <a href="/users" className="hover:bg-gray-200 px-3 py-2 rounded">
+          <a
+            href="/pages/userManage/users"
+            className="hover:bg-gray-200 px-3 py-2 rounded"
+          >
             👥 使用者管理
           </a>
-          <a href="/reports" className="hover:bg-gray-200 px-3 py-2 rounded">
+          <a
+            href="/pages/reports"
+            className="hover:bg-gray-200 px-3 py-2 rounded"
+          >
             📑 報表分析
           </a>
-          <a href="/settings" className="hover:bg-gray-200 px-3 py-2 rounded">
+          <a
+            href="/pages/settings"
+            className="hover:bg-gray-200 px-3 py-2 rounded"
+          >
             ⚙ 設定
           </a>
           <a
-            href="/otherSystems"
+            href="/pages/otherSystems"
             className="hover:bg-gray-200 px-3 py-2 rounded"
           >
             🖥 其他系統
           </a>
           <a
-            href="/logout"
+            href="/pages/userManage/logout"
             className="text-red-600 hover:bg-red-100 px-3 py-2 rounded"
           >
             🚪 登出
@@ -196,6 +244,12 @@ export default function Page() {
                       }`}
                     >
                       {user.is_active ? "停用" : "啟用"}
+                    </button>
+                    <button
+                      onClick={() => openPasswordModal(user)}
+                      className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    >
+                      重設密碼
                     </button>
                   </td>
                 </tr>
@@ -286,6 +340,39 @@ export default function Page() {
           </div>
         </div>
       )}
+
+      {isPasswordModalOpen && passwordUser && (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+          <h3 className="text-lg font-bold mb-4">重設密碼 - {passwordUser.username}</h3>
+          <form onSubmit={resetPassword} className="space-y-3">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="輸入新密碼"
+              className="w-full border rounded px-2 py-1"
+              required
+            />
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                確認重設
+              </button>
+              <button
+                type="button"
+                onClick={closePasswordModal}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                取消
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

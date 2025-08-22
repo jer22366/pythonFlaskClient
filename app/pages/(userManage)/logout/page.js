@@ -6,7 +6,7 @@ export default function Page() {
     useEffect(() => {
         const handleLogout = async () => {
             await fetch('/logout'); // 仍然可以呼叫後端登出 API
-            router.push('/login');  // 前端手動導向登入頁
+            router.push('/pages/login');  // 前端手動導向登入頁
         }
         handleLogout()
     }, [router])
