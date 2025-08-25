@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -20,8 +22,12 @@ export default function Page() {
 
       const data = await response.json();
 
-      if (data.status) {
-        window.location.href = data.dashboard_url; // 登入成功跳轉
+      if (data.status && data.token) {
+        // ✅ 將 JWT 存到 localStorage
+        localStorage.setItem("token", data.token);
+
+        // 登入成功跳轉
+        router.push(data.dashboard_url || "/pages/dashboard");
       } else {
         alert("Login failed: " + data.message);
       }
