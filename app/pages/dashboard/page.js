@@ -1,119 +1,151 @@
-'use client'
+'use client';
 
-import { Bar, Doughnut } from "react-chartjs-2";
-import { useState, useEffect } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import useAuthFetch from "../hooks/useAuthFetch";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+import Sidebar from "./components/Sidebar";
+import KPISection from "./components/KPISection";
+import ChartsSection from "./components/ChartsSection";
+import TasksSection from "./components/TasksSection";
 
 export default function Page() {
+  const router = useRouter();
+  const authFetch = useAuthFetch();
+  const [hasToken, setHasToken] = useState(false);
+
+  // --- KPI 假資料 ---
+  const [stats, setStats] = useState({});
+
+  // --- 用戶成長 ---
   const [userGrowthData, setUserGrowthData] = useState({
     labels: [],
     datasets: [{ label: "會員人數", data: [], backgroundColor: "rgba(59,130,246,0.7)" }]
   });
 
-  const [stats] = useState({
-    total_users: 1200,
-    new_users_today: 15,
-    revenue: 48000,
-    pending_tasks: 7
+  // --- 登入統計 ---
+  const [loginStatsData, setLoginStatsData] = useState({
+    labels: [],
+    datasets: [{ data: [], backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"] }]
   });
 
-  const userSourceData = {
-    labels: ["Facebook", "Google", "Other"],
-    datasets: [
-      { data: [50, 30, 20], backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"] }
-    ]
-  };
+  // --- 系統健康狀況 (Line：CPU 使用率) ---
+  const [systemHealthData, setSystemHealthData] = useState({
+    labels: ["09:00","10:00","11:00","12:00","13:00"],
+    datasets: [{ label: "CPU 使用率 (%)", data: [30, 45, 55, 60, 50], borderColor: "#36A2EB", fill: false }]
+  });
 
+  // --- 任務 ---
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "審核 3 筆請假單", status: "待處理" },
+    { id: 2, text: "確認本月薪資報表", status: "進行中" },
+    { id: 3, text: "伺服器磁碟快滿", status: "警告" }
+  ]);
+
+  // --- 使用者角色分布 ---
+  const [roleDistribution, setRoleDistribution] = useState({
+  labels: [],
+  datasets: [{ data: [], backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF"] }]
+});
+
+  // ✅ 抓 API 資料
   useEffect(() => {
-    fetch('/api/user/getUserChart')
-      .then(res => res.json())
-      .then(data => {
-        setUserGrowthData({
-          labels: data.labels,
-          datasets: [{ label: "會員人數",labels:data.leabels, data: data.values, backgroundColor: "rgba(59,130,246,0.7)" }]
-        });
-      })
-      .catch(err => console.error(err));
+    const fetchStats = async () => {
+      const res = await authFetch("/api/user/getStats");
+      if (res.status !== 200) return;
+      const data = await res.json();
+      setStats(data);
+    };
+
+    const fetchData = async () => {
+      const res = await authFetch("/api/user/getUserChart");
+      if (res.status !== 200) return;
+      const data = await res.json();
+      setUserGrowthData({
+        labels: data.labels,
+        datasets: [{ label: "會員人數", data: data.values, backgroundColor: "rgba(59,130,246,0.7)" }]
+      });
+      setHasToken(true);
+    };
+
+    const fetchLoginStats = async () => {
+      const res = await authFetch("/api/user/getCircleChartStats");
+      if (res.status !== 200) return;
+      const data = await res.json();
+      setLoginStatsData({
+        labels: data.labels,
+        datasets: [{ data: data.values, backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"] }]
+      });
+    };
+
+    const fetchRoleDistribution = async () => {
+      const res = await authFetch("/api/user/getRoleDistribution");
+      if (res.status !== 200) return;
+      const data = await res.json();
+      setRoleDistribution({
+        labels: data.labels,
+        datasets: [{ data: data.values, backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0","#9966FF"] }]
+      });
+    };
+
+    fetchStats();
+    fetchData();
+    fetchLoginStats();
+    fetchRoleDistribution();
+  }, [authFetch]);
+
+  // ✅ 模擬假資料自動刷新
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStats(prev => ({
+        ...prev,
+        total_users: prev.total_users + Math.floor(Math.random() * 5),
+        new_users_today: prev.new_users_today + Math.floor(Math.random() * 3),
+        revenue: prev.revenue + Math.floor(Math.random() * 1000),
+        pending_tasks: Math.max(0, prev.pending_tasks + (Math.random() > 0.5 ? 1 : -1))
+      }));
+
+      setSystemHealthData(prev => {
+        const newLabels = [...prev.labels, new Date().toLocaleTimeString().slice(0, 5)];
+        const newData = [...prev.datasets[0].data, Math.floor(Math.random() * 100)];
+        return {
+          labels: newLabels.slice(-6),
+          datasets: [{ ...prev.datasets[0], data: newData.slice(-6) }]
+        };
+      });
+
+      setTasks(prev => {
+        let newTasks = [...prev];
+        if (Math.random() > 0.7) {
+          newTasks.push({ id: Date.now(), text: "自動產生的新任務", status: "待處理" });
+        } else if (newTasks.length > 0 && Math.random() > 0.5) {
+          newTasks = newTasks.slice(1);
+        }
+        return newTasks;
+      });
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* 側邊欄 */}
-      <aside className="w-64 bg-white shadow-lg">
-        <h4 className="p-4 font-bold text-lg border-b">管理選單</h4>
-        <nav className="flex flex-col p-2 space-y-2">
-          <a href="/pages/dashboard" className="hover:bg-gray-200 px-3 py-2 rounded">📊 儀表板</a>
-          <a href="/pages/users" className="hover:bg-gray-200 px-3 py-2 rounded">👥 使用者管理</a>
-          <a href="/pages/reports" className="hover:bg-gray-200 px-3 py-2 rounded">📑 報表分析</a>
-          <a href="/pages/settings" className="hover:bg-gray-200 px-3 py-2 rounded">⚙ 設定</a>
-          <a href="/pages/otherSystems" className="hover:bg-gray-200 px-3 py-2 rounded">🖥 其他系統</a>
-          <a href="/pages/logout" className="text-red-600 hover:bg-red-100 px-3 py-2 rounded">🚪 登出</a>
-        </nav>
-      </aside>
-
-      {/* 主內容 */}
-      <main className="flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard</h1>
-
-        {/* KPI 卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-500 text-white rounded-lg p-4 shadow text-center">
-            <div className="text-3xl">👥</div>
-            <div className="text-lg font-semibold">用戶數量</div>
-            <div className="text-2xl">{stats.total_users}</div>
-          </div>
-
-          <div className="bg-green-500 text-white rounded-lg p-4 shadow text-center">
-            <div className="text-3xl">➕</div>
-            <div className="text-lg font-semibold">今日新增</div>
-            <div className="text-2xl">{stats.new_users_today}</div>
-          </div>
-
-          <div className="bg-yellow-500 text-white rounded-lg p-4 shadow text-center">
-            <div className="text-3xl">💰</div>
-            <div className="text-lg font-semibold">營收 (NT$)</div>
-            <div className="text-2xl">{stats.revenue}</div>
-          </div>
-
-          <div className="bg-red-500 text-white rounded-lg p-4 shadow text-center">
-            <div className="text-3xl">📝</div>
-            <div className="text-lg font-semibold">待辦事項</div>
-            <div className="text-2xl">{stats.pending_tasks}</div>
-          </div>
-        </div>
-
-        {/* 圖表區塊 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="font-bold mb-3">每月用戶成長</h3>
-            <Bar data={userGrowthData} />
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="font-bold mb-3">用戶來源比例</h3>
-            <Doughnut data={userSourceData} />
-          </div>
-        </div>
-      </main>
-    </div>
+    hasToken ? (
+      <div className="flex min-h-screen bg-gray-100">
+        <Sidebar />
+        <main className="flex-1 p-6 space-y-6">
+          <h1 className="text-2xl font-bold">Welcome to the Dashboard</h1>
+          <KPISection stats={stats} />
+          <ChartsSection
+            userGrowthData={userGrowthData}
+            loginStatsData={loginStatsData}
+            systemHealthData={systemHealthData}
+            roleDistribution={roleDistribution}
+          />
+          <TasksSection tasks={tasks} />
+        </main>
+      </div>
+    ) : (
+      <div>未登入，請先登入</div>
+    )
   );
 }

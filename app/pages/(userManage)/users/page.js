@@ -19,7 +19,7 @@ export default function Page() {
 
   const authFetch = useAuthFetch();
 
-  let ifhasToken = false;
+  const [hasToken, setHasToken] = useState(false);
   // 載入使用者
   const loadUsers = async (page = 1) => {
     const res = await authFetch(
@@ -31,7 +31,7 @@ export default function Page() {
       console.warn("loadUsers failed:", data.message);
       return;
     }
-    ifhasToken = true;
+    setHasToken(true);
     setUsers(data.users || []);
     setPages(data.pages || 1);
     setCurrentPage(data.current_page || 1);
@@ -119,9 +119,8 @@ export default function Page() {
     }
   };
 
-  return;
-  {
-    ifhasToken == true ? (
+  return (
+    hasToken ? (
       <div className="flex min-h-screen bg-gray-100">
         <Sidebar user={users[0]} />
         <main className="flex-1 p-6">
@@ -165,6 +164,6 @@ export default function Page() {
           />
         )}
       </div>
-    ) : null;
-  }
+    ) : <div>未登入，請先登入</div>
+  )
 }
