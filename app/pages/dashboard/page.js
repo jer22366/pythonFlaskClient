@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useAuthFetch from "../hooks/useAuthFetch";
 
-import Sidebar from "./components/Sidebar";
+import Sidebar from "../components/Sidebar";
 import KPISection from "./components/KPISection";
 import ChartsSection from "./components/ChartsSection";
 import TasksSection from "./components/TasksSection";
@@ -78,7 +78,7 @@ export default function Page() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
+      <Sidebar userLevel={stats.level} />
       <main className="flex-1 p-6 space-y-6">
         <h1 className="text-2xl font-bold">Welcome to the Dashboard</h1>
         <KPISection stats={stats} />

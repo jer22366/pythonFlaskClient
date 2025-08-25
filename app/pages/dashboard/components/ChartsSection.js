@@ -25,29 +25,22 @@ ChartJS.register(
   PointElement,
   LineElement
 );
-
 export default function ChartsSection({ userGrowthData, loginStatsData, systemHealthData, roleDistribution }) {
+  const charts = [
+    { title: "每月用戶成長", component: <Bar data={userGrowthData} /> },
+    { title: "近幾日登入量", component: <Doughnut data={loginStatsData} /> },
+    { title: "系統 CPU 使用率", component: <Line data={systemHealthData} /> },
+    { title: "角色分布", component: <Pie data={roleDistribution} /> }
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="font-bold mb-3">每月用戶成長</h3>
-        <Bar data={userGrowthData} />
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="font-bold mb-3">近幾日登入量</h3>
-        <Doughnut data={loginStatsData} />
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="font-bold mb-3">系統 CPU 使用率</h3>
-        <Line data={systemHealthData} />
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="font-bold mb-3">角色分布</h3>
-        <Pie data={roleDistribution} />
-      </div>
+      {charts.map((chart, idx) => (
+        <div key={idx} className="bg-white rounded-lg shadow p-4">
+          <h3 className="font-bold mb-3">{chart.title}</h3>
+          {chart.component}
+        </div>
+      ))}
     </div>
   );
 }
