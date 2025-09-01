@@ -78,7 +78,7 @@ export default function Page() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar userLevel={stats.level} />
+      <Sidebar />
       <main className="flex-1 p-6 space-y-6">
         <h1 className="text-2xl font-bold">Welcome to the Dashboard</h1>
         <KPISection stats={stats} />

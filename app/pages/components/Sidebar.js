@@ -4,7 +4,7 @@ export default function Sidebar({ userLevel }) {
   const links = [
     { label: "儀表板", href: "/pages/dashboard", icon: "📊" },
     { label: "使用者管理", href: "/pages/users", icon: "👥" },
-    { label: "報表分析", href: "/pages/reports", icon: "📑" },
+    { label: "部門", href: "/pages/department", icon: "📑" },
     { label: "設定", href: "/pages/settings", icon: "⚙" },
     { label: "其他系統", href: "/pages/otherSystems", icon: "🖥" },
   ];
