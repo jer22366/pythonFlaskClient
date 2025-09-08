@@ -32,10 +32,12 @@ export default function Page() {
         },
         body: JSON.stringify({
           ...form,
-          parent_id: form.parent_id || null,
-          manager_id: form.manager_id || null,
+          parent_id: form.parent_id ? Number(form.parent_id) : null,
+          manager_id: form.manager_id ? Number(form.manager_id) : null,
+          level: Number(form.level),
         }),
       });
+
 
       if (res.ok) {
         setMessage("✅ 部門新增成功！");
