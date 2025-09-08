@@ -27,6 +27,11 @@ export default function Page() {
 
   // ✅ 抓 API
   useEffect(() => {
+    const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/pages/login");
+    return;
+  }
     const fetchAllData = async () => {
       const endpoints = [
         ["/api/user/getStats", setStats],
